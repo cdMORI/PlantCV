@@ -1,0 +1,29 @@
+import subprocess
+import time
+import os
+from datetime import datetime
+# Create the folder to store images (if it doesn't already exist)
+# Make sure to change the pathway depending on host computer
+folder_path = "/home/mori1/Desktop/Moriphotos"
+if not os.path.exists(folder_path):
+    os.makedirs(folder_path)
+
+# Initialize the camera
+
+# Take 20 pictures, every 2 minutes
+rounds = 1 # set the amount of rounds
+amount = 1 # set the amount of pics per round
+
+ctime = datetime.now().time()
+ctime = datetime.now().strftime("%H:%M")
+for rds in range (0, rounds):
+    for pic in range(0, amount):
+        # Make the filename for each image (image_1.jpg, image_2.jpg, ...)
+        filename = os.path.join(folder_path, f"{ctime}_{datetime.today().date()}.jpg")
+        
+        # Capture the image and save it to a file
+        image = subprocess.run(["libcamera-still"," --width"," 800"," --height ","800","-o", filename])
+
+    
+        print(f"Picture {pic + 1} taken. Waiting for 2 minutes")
+        time.sleep(1)
