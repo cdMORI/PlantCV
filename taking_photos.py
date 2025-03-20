@@ -25,5 +25,5 @@ for rds in range (0, rounds):
         image = subprocess.run(["libcamera-still"," --width"," 800"," --height ","800","-o", filename])
 
     
-        print(f"Picture {round +1 }.{pic + 1} taken. Waiting for 2 minutes")
+        print(f"Picture {rds +1 }.{pic + 1} taken. Waiting for 2 minutes")
     time.sleep(1) # sleep after a round is done.
