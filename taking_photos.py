@@ -15,10 +15,10 @@ rounds = 1 # set the amount of rounds
 amount = 1 # set the amount of pics per round
 
 ctime = datetime.now().time()
-ctime = datetime.now().strftime("%H:%M")
+ctime = datetime.now().strftime("%H:%M:%S")
 for rds in range (0, rounds):
     for pic in range(0, amount):
-        # Make the filename for each image (H:M_Y-M-D.jpg)
+        # Make the filename for each image (H:M:S_Y-M-D.jpg)
         filename = os.path.join(folder_path, f"{ctime}_{datetime.today().date()}.jpg")
         
         # Capture the image and save it to a file
