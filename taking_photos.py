@@ -11,8 +11,9 @@ if not os.path.exists(folder_path):
 # Initialize the camera
 
 # Take x amount of pictures, for x amount of rounds every x seconds
-rounds = 1 # set the amount of rounds
-amount = 1 # set the amount of pics per round
+rounds = 5 # set the amount of rounds
+amount = 3 # set the amount of pics per round
+seconds = 60 # seconds between each round
 
 ctime = datetime.now().time()
 ctime = datetime.now().strftime("%H:%M:%S")
@@ -26,4 +27,5 @@ for rds in range (0, rounds):
 
     
         print(f"Picture {rds +1 }.{pic + 1} taken. Waiting for 2 minutes")
-    time.sleep(1) # sleep after a round is done.
+        time.sleep(1)
+    time.sleep(seconds) # sleep after a round is done.
