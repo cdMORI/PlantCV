@@ -1,0 +1,106 @@
+# Import necessary libraries
+from plantcv import plantcv as pcv
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+import csv
+
+# Set matplotlib parameters
+plt.rcParams["figure.figsize"] = [8, 8]
+pcv.params.text_size = 50  # Increase text size in plots
+pcv.params.text_thickness = 15  # Increase line thickness in plots
+
+# Define options class to handle input/output paths and parameters
+class options:
+    def __init__(self):       
+        self.image = "/Users/usr12/Documents/mori/mori/project_roccs/indir/2022-06-15_140001.jpg"  # Path to file
+        self.debug = "plot"  # Options: print (write to a file), plot (show image), none (do nothing)
+        self.writeimg = False
+        self.result = "/Users/Usr12/Desktop/mori/mori/project_roccs/result/out_data.json"  # Results output file
+        self.outdir = "/Users/Usr12/Desktop/mori/mori/project_roccs/outdir/"  # Output directory
+        
+# Initialize options
+args = options()
+pcv.params.debug_outdir = args.outdir
+pcv.params.debug = args.debug
+print(args)
+
+# Read the input image
+img, path, filename = pcv.readimage(filename=args.image)
+print(filename)
+
+# Crop image
+img = pcv.crop(img=img, x=950, y=1000, h=915, w=2850)
+
+# Visualize the colorspace for potential background subtraction
+colorspace = pcv.visualize.colorspaces(rgb_img=img, original_img=False)
+
+# Convert to grayscale HSV (Hue, Saturation, Value) and extract the V (Value) channel
+v = pcv.rgb2gray_hsv(rgb_img=img, channel='v')
+
+# Display the histogram of pixel intensities
+hist = pcv.visualize.histogram(img=v)
+
+# Apply binary thresholding on the V channel (to find light areas)
+v_thresh = pcv.threshold.binary(gray_img=v, threshold=90, max_value=255, object_type='light')
+
+# Fill small objects with background to remove noise
+v_fill_image1 = pcv.fill(bin_img=v_thresh, size=50)
+
+# Dilate the thresholded image to increase object size
+v_dilated = pcv.dilate(gray_img=v_fill_image1, ksize=2, i=1)
+
+# Fill again to clean the image
+v_fill_image2 = pcv.fill(bin_img=v_thresh, size=500)
+
+# Find objects in the image
+obj, obj_hierarchy = pcv.find_objects(img=img, mask=v_dilated)
+
+# Create multiple ROIs (Regions of Interest)
+rois1, roi_hierarchy1 = pcv.roi.multi(img=img, coord=(100, 800), radius=75, spacing=(288, 100), nrows=1, ncols=10)
+
+# Define and filter objects based on ROIs
+areas = []
+for i, roi in enumerate(rois1):
+    hierarchy = roi_hierarchy1[i]
+    filtered_contours, filtered_hierarchy, filtered_mask, filtered_area = pcv.roi_objects(
+        img=img, roi_type="partial", roi_contour=roi, roi_hierarchy=hierarchy, object_contour=obj, obj_hierarchy=obj_hierarchy)
+    areas.append(filtered_area)
+    print(f"Object {i} Area: {filtered_area} pixels")
+
+# Write results to CSV file
+output_csv = '/Users/usr12/Desktop/mori/mori/project_roccs/results/plantdata2pm.csv'
+
+# Ensure the directory exists, create it if it doesn't
+output_dir = os.path.dirname(output_csv)
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+
+# Open CSV file for appending and write the data
+try:
+    with open(output_csv, 'a', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow([filename] + areas)  # Write the filename and areas
+except FileNotFoundError:
+    print(f"Error: The file {output_csv} was not found. Please check the file path.")
+
+# Create a bar chart of object areas
+x = range(len(areas))
+tick_labels = [f'Object {i+1}' for i in range(len(areas))]
+
+plt.bar(x, areas, tick_label=tick_labels, width=0.5, color='b')
+plt.xlabel('Object Index')
+plt.ylabel('Area (pixels)')
+plt.title('Plant Object Areas')
+plt.xticks(rotation=45)
+plt.tight_layout()
+
+# Save the plot as an image
+chart_filename = '/Users/Usr12/Desktop/mori/mori/project_roccs/results/charts/filename.png'
+plt.savefig(chart_filename)
+
+# Optionally, show the plot
+plt.show()
+
+print(f"Results saved to: {output_csv}")
+print(f"Chart saved to: {chart_filename}")
